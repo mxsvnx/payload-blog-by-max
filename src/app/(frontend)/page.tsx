@@ -1,59 +1,40 @@
-import { headers as getHeaders } from 'next/headers.js'
-import Image from 'next/image'
-import { getPayload } from 'payload'
-import React from 'react'
-import { fileURLToPath } from 'url'
-
-import config from '@/payload.config'
-import './styles.css'
+import { getPosts } from '../(payload)/api/getPosts'
 
 export default async function HomePage() {
-  const headers = await getHeaders()
-  const payloadConfig = await config
-  const payload = await getPayload({ config: payloadConfig })
-  const { user } = await payload.auth({ headers })
-
-  const fileURL = `vscode://file/${fileURLToPath(import.meta.url)}`
+  const posts = await getPosts()
 
   return (
-    <div className="home">
-      <div className="content">
-        <picture>
-          <source srcSet="https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-favicon.svg" />
-          <Image
-            alt="Payload Logo"
-            height={65}
-            src="https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-favicon.svg"
-            width={65}
-          />
-        </picture>
-        {!user && <h1>Welcome to your new project.</h1>}
-        {user && <h1>Welcome back, {user.email}</h1>}
-        <div className="links">
-          <a
-            className="admin"
-            href={payloadConfig.routes.admin}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Go to admin panel
-          </a>
-          <a
-            className="docs"
-            href="https://payloadcms.com/docs"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            Documentation
-          </a>
-        </div>
+    <main className="blog">
+      <h1>Блог</h1>
+
+      <div className="post-list">
+        {posts.map((post: any) => (
+          <article key={post.id} className="post-card">
+            <h2 className="post-title">{post.title}</h2>
+
+            {post.image?.url && (
+              <img
+                src={post.image.url}
+                alt={post.title}
+                className="post-image"
+              />
+            )}
+
+            <div className="post-content">
+              {/* Если content — обычная строка */}
+              {typeof post.content === 'string' && <p>{post.content}</p>}
+
+              {/* Если content — richText в виде lexical */}
+              {typeof post.content === 'object' &&
+                post.content?.root?.children?.map((block: any, i: number) => (
+                  <p key={i}>
+                    {block.children?.map((child: any) => child.text).join('')}
+                  </p>
+                ))}
+            </div>
+          </article>
+        ))}
       </div>
-      <div className="footer">
-        <p>Update this page by editing</p>
-        <a className="codeLink" href={fileURL}>
-          <code>app/(frontend)/page.tsx</code>
-        </a>
-      </div>
-    </div>
+    </main>
   )
 }
