@@ -1,10 +1,18 @@
 export async function getPosts() {
-  const res = await fetch('http://localhost:3000/api/posts?depth=1');
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  
+  try {
+    const res = await fetch(`${baseUrl}/api/posts?depth=1`);
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch posts');
+    if (!res.ok) {
+      console.error(`Fetch error: ${res.status} ${res.statusText}`);
+      return [];
+    }
+
+    const data = await res.json();
+    return data.docs || [];
+  } catch (error) {
+    console.error('Failed to fetch posts:', error);
+    return [];
   }
-
-  const data = await res.json();
-  return data.docs;
 }
